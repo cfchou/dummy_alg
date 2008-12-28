@@ -27,25 +27,25 @@ MODULE_DESCRIPTION("dummy connection tracking helper");
 MODULE_ALIAS("ip_conntrack_dummy");
 
 #define DUMMY_PORT	2008
-
 #define MAX_PORTS	8
+#define DUMMY_TIMEOUT	300
+#define EXPECTED_TIMEOUT	30
+
 static unsigned short ports[MAX_PORTS];
 static unsigned int ports_c;
 module_param_array(ports, ushort, &ports_c, 0400);
 MODULE_PARM_DESC(ports, "port numbers of dummy servers");
 
-#define DUMMY_TIMEOUT	300
-#define EXPECTED_TIMEOUT	30
 
 static unsigned int dummy_timeout __read_mostly = DUMMY_TIMEOUT;
+module_param(dummy_timeout, uint, 0600);
+MODULE_PARM_DESC(dummy_timeout, "timeout for the master dummy session");
 
 static const struct nf_conntrack_expect_policy dummy_exp_policy = {
 	.max_expected = 1,
 	.timeout = EXPECTED_TIMEOUT
 };
 
-module_param(dummy_timeout, uint, 0600);
-MODULE_PARM_DESC(dummy_timeout, "timeout for the master dummy session");
 
 
 /* 'dummy' protocol
@@ -140,7 +140,7 @@ static int __init nf_conntrack_dummy_init(void)
 		//helpme[i].helper.timeout = EXPECTED_TIMEOUT;
 
 		/* can be multiple policies: expect_policy[expect_class_max] */
-		helpme[i].helper.expect_policy = dummy_exp_policy;
+		helpme[i].helper.expect_policy = &dummy_exp_policy;
 		helpme[i].helper.expect_class_max = NF_CT_EXPECT_CLASS_DEFAULT;
 
 
