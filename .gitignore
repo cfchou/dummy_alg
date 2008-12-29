@@ -1,0 +1,11 @@
+.svn/*
+.tmp_versions/*
+*.swp
+*.ko
+*.o
+*.cmd
+Module.symvers
+modules.order
+nf_conntrack_dummy.1.c
+nf_conntrack_dummy.mod.c
+
