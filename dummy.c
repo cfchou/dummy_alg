@@ -1,3 +1,20 @@
+/* dummy.c
+ *
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <assert.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+
+#include "dummy.h"
 
 int get_if_addr(char const *ifname, struct sockaddr_in *paddr)
 {
@@ -37,11 +54,6 @@ int listen_local(struct sockaddr_in *addr)
 		return -1;
 	}
 	if (0 != bind(listen_sock, (struct sockaddr *)addr, sizeof(*addr))) {
-		vvv_perror();
-		close(listen_sock);
-		return -1;
-	}
-	if (0 != listen(listen_sock, SOMAXCONN)) {
 		vvv_perror();
 		close(listen_sock);
 		return -1;

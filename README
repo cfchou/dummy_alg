@@ -1,3 +1,27 @@
+
+/* 'dummy' protocol
+ * peer1 -> peer2:DUMMY_PORT
+ *
+ * | ip header	| udp header	| 'dummy' data...
+ *
+ * octet[0] 
+ *	type: make it 0, reserved for the futhure
+ * octet[1-4]
+ *	ipv4: ip of peer1
+ * octet[5-6]
+ *	port: port which peer1 listens
+ * octet[7]
+ *      length: length of payload
+ * octet[8-]
+ * 	payload
+ *	
+ * peer1 sends its greeting as well as address info to peer2.
+ * then peer2 greets back.
+ * 
+ * here alg serves these purposes:
+ *
+ */
+
 bash> cd /path/to/module-source/
 bash> echo "obj-m += mymodule.ko" > Makefile
 bash> make -C /usr/src/linux/ M=/root/src/dummy_alg modules

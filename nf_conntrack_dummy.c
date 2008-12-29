@@ -47,30 +47,6 @@ static const struct nf_conntrack_expect_policy dummy_exp_policy = {
 };
 
 
-
-/* 'dummy' protocol
- * peer1 -> peer2:DUMMY_PORT
- *
- * | ip header	| udp header	| 'dummy' data...
- *
- * octet[0] 
- *	type: make it 0, reserved for the futhure
- * octet[1-4]
- *	ipv4: ip of peer1
- * octet[5-6]
- *	port: port which peer1 listens
- * octet[7]
- *      length: length of payload
- * octet[8-]
- * 	payload
- *	
- * peer1 sends its greeting as well as address info to peer2.
- * then peer2 greets back.
- * 
- * here alg serves these purposes:
- *
- */
-
 static int dummy_help(struct sk_buff *skb,
 		    unsigned int protoff,
 		    struct nf_conn *ct,
@@ -86,12 +62,6 @@ static int dummy_help(struct sk_buff *skb,
 
 	return ret;
 }
-
-
-
-
-
-
 
 // only support IPv4
 struct helper_wrapper_t {
