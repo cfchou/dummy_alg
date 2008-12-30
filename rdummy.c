@@ -24,7 +24,7 @@ static ssize_t compose_greeting_back(uint8_t const *recv_buf,
 int main(int argc , char * const argv[])
 {
 	int opt = 0;
-	int listen_sock = 0;
+	int bind_sock = 0;
 	int sock = 0;
 	struct sockaddr_in local_addr, raddr;
 	uint8_t buf[GREETING_MAX + 1];
@@ -57,18 +57,18 @@ int main(int argc , char * const argv[])
 		return -1;
 	}
 	local_addr.sin_port = htons(DUMMY_PORT);
-	if (-1 == (listen_sock = listen_local(&local_addr))) {
+	if (-1 == (bind_sock = bind_local(&local_addr))) {
 		return -1;
 	}
 	memset(buf, 0, sizeof(buf));
-	if (-1 == (buf_sz = recvfrom(listen_sock, buf, sizeof(buf) - 1, 0,
+	if (-1 == (buf_sz = recvfrom(bind_sock, buf, sizeof(buf) - 1, 0,
 		NULL, 0))) {
 		vvv_perror();
-		close(listen_sock);
+		close(bind_sock);
 		return -1;
 	}
 	fprintf(stdout, "[R] Greeting from remote: %u bytes\n", buf_sz);
-	close(listen_sock);
+	close(bind_sock);
 
 
 	if (-1 == (buf_back_sz = compose_greeting_back(buf, buf_sz, &raddr,

@@ -17,11 +17,19 @@
  *	
  * peer1 sends its greeting as well as address info to peer2.
  * then peer2 greets back.
- * 
- * here alg serves these purposes:
  *
  */
 
+/*
+ * test programs demostrate using dummy protocol
+ */
+peer2> ./rdummy -i interface
+peer1> ./sdummy -i interface -p port -r peer2_ip
+
+
+/*
+ * build alg
+ */
 bash> cd /path/to/module-source/
-bash> echo "obj-m += mymodule.ko" > Makefile
+bash> echo "obj-m += nf_conntrack_dummy.ko" >> Makefile
 bash> make -C /usr/src/linux/ M=/root/src/dummy_alg modules

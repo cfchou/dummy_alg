@@ -38,25 +38,25 @@ int get_if_addr(char const *ifname, struct sockaddr_in *paddr)
 	return 0;
 }
 
-int listen_local(struct sockaddr_in *addr)
+int bind_local(struct sockaddr_in *addr)
 {
-	int listen_sock = 0;
+	int bind_sock = 0;
 	int const reuse = 1;
 
-	if (-1 == (listen_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+	if (-1 == (bind_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
 		vvv_perror();
 		return -1;
 	}
-	if (0 != setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
+	if (0 != setsockopt(bind_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
 		sizeof(reuse))) {
 		vvv_perror();
-		close(listen_sock);
+		close(bind_sock);
 		return -1;
 	}
-	if (0 != bind(listen_sock, (struct sockaddr *)addr, sizeof(*addr))) {
+	if (0 != bind(bind_sock, (struct sockaddr *)addr, sizeof(*addr))) {
 		vvv_perror();
-		close(listen_sock);
+		close(bind_sock);
 		return -1;
 	}
-	return listen_sock;
+	return bind_sock;
 }

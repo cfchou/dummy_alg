@@ -24,7 +24,7 @@ static ssize_t compose_greeting(struct sockaddr_in *addr, uint8_t *buf,
 int main(int argc , char * const argv[])
 {
 	int opt = 0;
-	int listen_sock = 0;
+	int bind_sock = 0;
 	int sock = 0;
 	struct sockaddr_in local_addr, raddr;
 	uint8_t buf[GREETING_MAX + 1];
@@ -79,36 +79,36 @@ int main(int argc , char * const argv[])
 
 	// according to our "dummy protocol", wait for a greeting back, which
 	// is gonna be "expected" by alg
-	if (-1 == (listen_sock = listen_local(&local_addr))) {
+	if (-1 == (bind_sock = bind_local(&local_addr))) {
 		return -1;
 	}
 
 	// send our greeting
 	if (-1 == (sock = socket(AF_INET, SOCK_DGRAM, 0))) {
 		vvv_perror();
-		close(listen_sock);
+		close(bind_sock);
 		return -1;
 	}
 	if (buf_sz != sendto(sock, buf, buf_sz, 0, (struct sockaddr *)&raddr,
 		sizeof(raddr))) {
 		vvv_perror();
 		close(sock);
-		close(listen_sock);
+		close(bind_sock);
 		return -1;
 	}
 	close(sock);
 
 	// receive greeting back from remote
 	memset(buf, 0, sizeof(buf));
-	if (-1 == (buf_sz = recvfrom(listen_sock, buf, sizeof(buf) - 1, 0,
+	if (-1 == (buf_sz = recvfrom(bind_sock, buf, sizeof(buf) - 1, 0,
 		NULL, 0))) {
 		vvv_perror();
-		close(listen_sock);
+		close(bind_sock);
 		return -1;
 	}
 	
 	fprintf(stdout, "[S] Greeting from remote(%u bytes): \"%s\"\n", buf_sz, buf);
-	close(listen_sock);
+	close(bind_sock);
 	return 0;
 }
 

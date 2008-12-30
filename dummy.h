@@ -24,5 +24,5 @@ do {									\
 #define GREETING_MAX	128
 
 extern int get_if_addr(char const *ifname, struct sockaddr_in *paddr);
-extern int listen_local(struct sockaddr_in *addr);
+extern int bind_local(struct sockaddr_in *addr);
 #endif /* _DUMMY_H_CFCHOU_200812 */
