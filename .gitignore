@@ -4,6 +4,7 @@
 *.ko
 *.o
 *.cmd
+*.gch
 Module.symvers
 modules.order
 nf_conntrack_dummy.1.c
