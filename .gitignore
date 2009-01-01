@@ -1,6 +1,5 @@
-.svn/*
-.tmp_versions/*
-*.swp
+.*
+!.gitignore
 *.ko
 *.o
 *.cmd
