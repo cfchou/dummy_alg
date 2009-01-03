@@ -116,7 +116,7 @@ static ssize_t compose_greeting(struct sockaddr_in *addr, uint8_t *buf,
 	size_t buf_sz)
 {
 	int greeting_len = strlen(greeting);
-	if ((uint8_t)(-1) < greeting_len || buf_sz < greeting_len + 8) {
+	if ((uint8_t)(-1) < greeting_len || buf_sz < greeting_len + DUMMY_HDR_LEN) {
 		return -1;
 	}
 
@@ -125,7 +125,7 @@ static ssize_t compose_greeting(struct sockaddr_in *addr, uint8_t *buf,
 	memcpy(buf + 1, &addr->sin_addr.s_addr, 4);
 	memcpy(buf + 5, &addr->sin_port, 2);
 	buf[7] = greeting_len;
-	memcpy(buf + 8, greeting, greeting_len); 
-	return greeting_len + 8;
+	memcpy(buf + DUMMY_HDR_LEN, greeting, greeting_len); 
+	return greeting_len + DUMMY_HDR_LEN;
 }
 

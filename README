@@ -3,7 +3,7 @@
  * peer1 -> peer2:DUMMY_PORT
  *
  * | ip header	| udp header	| 'dummy' data...
- *
+ * at least 8 octets
  * octet[0] 
  *	type: make it 0, reserved for the futhure
  * octet[1-4]
@@ -12,6 +12,7 @@
  *	port: port which peer1 listens
  * octet[7]
  *      length: length of payload
+
  * octet[8-]
  * 	payload
  *	

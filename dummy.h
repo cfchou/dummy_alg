@@ -23,6 +23,8 @@ do {									\
 #define DUMMY_PORT	2008
 #define GREETING_MAX	128
 
+#define DUMMY_HDR_LEN	8
+
 extern int get_if_addr(char const *ifname, struct sockaddr_in *paddr);
 extern int bind_local(struct sockaddr_in *addr);
 #endif /* _DUMMY_H_CFCHOU_200812 */

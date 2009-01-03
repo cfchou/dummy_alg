@@ -26,10 +26,12 @@ MODULE_AUTHOR("Chou Chifeng <cfchou@gmail.com>");
 MODULE_DESCRIPTION("dummy connection tracking helper");
 MODULE_ALIAS("ip_conntrack_dummy");
 
-#define DUMMY_PORT	2008
-#define MAX_PORTS	8
-#define DUMMY_TIMEOUT	300
+#define DUMMY_PORT		2008
+#define MAX_PORTS		8
+#define DUMMY_TIMEOUT		300
 #define EXPECTED_TIMEOUT	30
+
+#define DUMMY_HDR_LEN		8
 
 static unsigned short ports[MAX_PORTS];
 static unsigned int ports_c;
@@ -46,6 +48,11 @@ static const struct nf_conntrack_expect_policy dummy_exp_policy = {
 	.timeout = EXPECTED_TIMEOUT
 };
 
+unsigned int (*nf_nat_dummy_hook)(struct sk_buff *skb, 
+	enum ip_conntrack_info ctinfo,
+	struct nf_conntrack_expect *exp);
+EXPORT_SYMBOL_GPL(nf_nat_dummy_hook);
+
 
 static int dummy_help(struct sk_buff *skb,
 		    unsigned int protoff,
@@ -53,13 +60,69 @@ static int dummy_help(struct sk_buff *skb,
 		    enum ip_conntrack_info ctinfo)
 {
 	int ret = NF_ACCEPT;
+	int dir = CTINFO2DIR(ctinfo);
+	unsigned int headlen = 0;
+	unsigned int dataoff, datalen;
+	struct nf_conntrack_expect *exp = NULL;
+
+	uint8_t *dh = NULL;
+	typeof(nf_nat_dummy_hook) nf_nat_dummy;
+
 	printk(KERN_ALERT "[INFO] I can help!");
 	
+
+	if (IP_CT_IS_REPLY > ctinfo) {
+		printk(KERN_ALERT "[INFO] A new conntrack!");
+	}
+
+	printk(KERN_ALERT "src: " NIPQUAD_FMT ":%d\n",
+		NIPQUAD(ct->tuplehash[dir].tuple.src.u3.all),
+		ntohs(ct->tuplehash[dir].tuple.src.u.all));
+	printk(KERN_ALERT "dst: " NIPQUAD_FMT ":%d\n",
+		NIPQUAD(ct->tuplehash[dir].tuple.dst.u3.all),
+		ntohs(ct->tuplehash[dir].tuple.dst.u.all));
 
 	/* we can refresh only after some checks */
 	nf_ct_refresh(ct, skb, dummy_timeout * HZ);
 
+	/* no matter skb is linear or not, dummy header(DH) must be in the
+	 * head area of skb.
+	 */
 
+	// instead of skb->len. using headlen is sufficient for DH.
+	headlen = skb_headlen(skb);
+	// where DH begins
+	dataoff = protoff + DUMMY_HDR_LEN;
+	// DH + payload(possibly only part of because of non-linear)
+	datalen = headlen - dataoff;
+	if (headlen < dataoff + DUMMY_HDR_LEN) {
+		printk(KERN_ALERT "[INFO] dummy header can not span multiple"
+			"pages");
+		return ret;
+	}
+
+	dh = skb->data + dataoff;
+
+	exp = nf_ct_expect_alloc(ct);
+	if (NULL == exp) {
+		return NF_DROP; 
+	}
+	nf_ct_expect_init(exp, NF_CT_EXPECT_CLASS_DEFAULT, nf_ct_l3num(ct),
+		&ct->tuplehash[!dir].tuple.src.u3,
+		(union nf_inet_addr *)dh + 1,
+		IPPROTO_UDP, NULL,
+		(__be16 *)dh + 5);
+	
+	nf_nat_dummy = rcu_dereference(nf_nat_dummy_hook);
+
+	if (NULL != nf_nat_dummy && ct->status & IPS_NAT_MASK) {
+		ret = nf_nat_dummy(skb, ctinfo, exp);
+	} else {
+		if (0 != nf_ct_expect_related(exp))
+			ret = NF_DROP;
+	}
+
+	nf_ct_expect_put(exp);
 	return ret;
 }
 

@@ -95,8 +95,8 @@ static ssize_t compose_greeting_back(uint8_t const *recv_buf,
 	size_t recv_buf_sz, struct sockaddr_in *addr, uint8_t *buf,
 	size_t buf_sz)
 {
-	if (recv_buf_sz < 8 || recv_buf_sz < recv_buf[7] + 8 ||
-		buf_sz < recv_buf[7] + 8) {
+	if (recv_buf_sz < DUMMY_HDR_LEN || recv_buf_sz < recv_buf[7] + DUMMY_HDR_LEN ||
+		buf_sz < recv_buf[7] + DUMMY_HDR_LEN) {
 		return -1;
 	}
 
@@ -104,7 +104,7 @@ static ssize_t compose_greeting_back(uint8_t const *recv_buf,
 	// network-endian
 	memcpy(&addr->sin_addr.s_addr, recv_buf + 1, 4);
 	memcpy(&addr->sin_port, recv_buf + 5, 2);
-	memcpy(buf, recv_buf + 8, recv_buf[7]);
+	memcpy(buf, recv_buf + DUMMY_HDR_LEN, recv_buf[7]);
 	return recv_buf[7];
 }
 
