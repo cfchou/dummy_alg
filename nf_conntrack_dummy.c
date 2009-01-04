@@ -1,3 +1,6 @@
+/*
+ *
+ */
 
 /*
 #include <linux/module.h>
@@ -7,19 +10,21 @@
 #include <linux/ipv6.h>
 #include <linux/ctype.h>
 #include <linux/inet.h>
+
+#include <linux/skbuff.h>
+#include <linux/in.h>
 */
 
 #include <linux/module.h>
 #include <linux/ctype.h>
-//#include <linux/skbuff.h>
-//#include <linux/inet.h>
-//#include <linux/in.h>
 #include <linux/udp.h>
 #include <linux/netfilter.h>
 
 #include <net/netfilter/nf_conntrack.h>
 #include <net/netfilter/nf_conntrack_expect.h>
 #include <net/netfilter/nf_conntrack_helper.h>
+
+#include "nf_conntrack_dummy.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Chou Chifeng <cfchou@gmail.com>");
@@ -97,11 +102,15 @@ static int dummy_help(struct sk_buff *skb,
 	datalen = headlen - dataoff;
 	if (headlen < dataoff + DUMMY_HDR_LEN) {
 		printk(KERN_ALERT "[INFO] dummy header can not span multiple"
-			"pages");
+			"pages\n");
 		return ret;
 	}
 
 	dh = skb->data + dataoff;
+	if (0 != dh[0]) {
+		printk(KERN_ALERT "[INFO] not dummy protocol\n");
+		return NF_ACCEPT;
+	}
 
 	exp = nf_ct_expect_alloc(ct);
 	if (NULL == exp) {

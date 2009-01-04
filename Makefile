@@ -1,4 +1,5 @@
 obj-m += nf_conntrack_dummy.o
+obj-m += nf_nat_dummy.o
 
 EXTRA_CFLAGS += -g -Wall
 
