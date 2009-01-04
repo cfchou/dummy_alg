@@ -58,6 +58,12 @@ unsigned int (*nf_nat_dummy_hook)(struct sk_buff *skb,
 	struct nf_conntrack_expect *exp);
 EXPORT_SYMBOL_GPL(nf_nat_dummy_hook);
 
+static void ip_conntrack_dummy_expected(struct nf_conn *ct,
+	struct nf_conntrack_expect *exp)
+{
+	printk(KERN_ALERT "[INFO] %s(%d) ip_conntrack_dummy_expected\n",
+		__FILE__, __LINE__);
+}
 
 static int dummy_help(struct sk_buff *skb,
 		    unsigned int protoff,
@@ -70,14 +76,14 @@ static int dummy_help(struct sk_buff *skb,
 	unsigned int dataoff, datalen;
 	struct nf_conntrack_expect *exp = NULL;
 
-	uint8_t *dh = NULL;
+	u_int8_t *dh = NULL;
 	typeof(nf_nat_dummy_hook) nf_nat_dummy;
 
-	printk(KERN_ALERT "[INFO] I can help!");
+	printk(KERN_ALERT "[INFO] I can help!\n");
 	
 
 	if (IP_CT_IS_REPLY > ctinfo) {
-		printk(KERN_ALERT "[INFO] A new conntrack!");
+		printk(KERN_ALERT "[INFO] A new conntrack!\n");
 	}
 
 	printk(KERN_ALERT "src: " NIPQUAD_FMT ":%d\n",
@@ -116,17 +122,42 @@ static int dummy_help(struct sk_buff *skb,
 	if (NULL == exp) {
 		return NF_DROP; 
 	}
+
 	nf_ct_expect_init(exp, NF_CT_EXPECT_CLASS_DEFAULT, nf_ct_l3num(ct),
 		&ct->tuplehash[!dir].tuple.src.u3,
-		(union nf_inet_addr *)dh + 1,
-		IPPROTO_UDP, NULL,
-		(__be16 *)dh + 5);
+		(union nf_inet_addr *)(dh + 1),
+		IPPROTO_UDP,
+		NULL,	// expect's src port doesn't matter
+		(__be16 *)(dh + 5));
+
+#if 0
+	{
+		unsigned int my_ip = 0;
+		u_int16_t my_port = 0;
+		memcpy(&my_ip, dh + 1, 4);
+		my_port = *((__be16*)(dh + 5));
+		printk(KERN_ALERT "[INFO] { %x, %x, %x, %x: %x, %x}\n",
+			dh[1], dh[2], dh[3], dh[4], dh[5], dh[6]);
+		printk(KERN_ALERT "[INFO] %s(%d) dst:"
+			NIPQUAD_FMT ":%d\n", __FILE__, __LINE__,
+			NIPQUAD(my_ip),
+			ntohs(my_port));
+	}
+#endif
 	
 	nf_nat_dummy = rcu_dereference(nf_nat_dummy_hook);
 
 	if (NULL != nf_nat_dummy && ct->status & IPS_NAT_MASK) {
+		printk(KERN_ALERT "[INFO] managed by nf_nat_dummy_hook\n");
 		ret = nf_nat_dummy(skb, ctinfo, exp);
 	} else {
+		printk(KERN_ALERT "[INFO] %s(%d) we expect... "
+			NIPQUAD_FMT ":%d\t->" NIPQUAD_FMT ":%d\n", __FILE__, __LINE__,
+			NIPQUAD(exp->tuple.src.u3.all),
+			ntohs(exp->tuple.src.u.udp.port),
+			NIPQUAD(exp->tuple.dst.u3.all),
+			ntohs(exp->tuple.dst.u.udp.port));
+		exp->expectfn = ip_conntrack_dummy_expected;
 		if (0 != nf_ct_expect_related(exp))
 			ret = NF_DROP;
 	}

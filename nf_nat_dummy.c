@@ -36,18 +36,18 @@ static void ip_nat_dummy_expected(struct nf_conn *ct,
 	struct nf_nat_range range;
 	BUG_ON(ct->status & IPS_NAT_DONE_MASK);
 	
-	printk(KERN_ALERT "[INFO] raw exp ORIGN: " NIPQUAD_FMT ":%d ->"
+	printk(KERN_ALERT "[INFO] raw exp ORIGN: " NIPQUAD_FMT ":%d\t->"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all));
-	printk(KERN_ALERT "[INFO] raw exp REPLY: " NIPQUAD_FMT ":%d ->"
+	printk(KERN_ALERT "[INFO] raw exp REPLY: " NIPQUAD_FMT ":%d\t<-"
 		NIPQUAD_FMT ":%d\n",
-		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u3.all),
-		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u3.all),
-		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all));
+		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all),
+		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u3.all),
+		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all));
 
 	// SNAT
 	range.flags = IP_NAT_RANGE_MAP_IPS;
@@ -55,18 +55,18 @@ static void ip_nat_dummy_expected(struct nf_conn *ct,
 		ct->master->tuplehash[!exp->dir].tuple.dst.u3.ip;
 	nf_nat_setup_info(ct, &range, IP_NAT_MANIP_SRC);
 
-	printk(KERN_ALERT "[INFO] SNAT exp ORIGN: " NIPQUAD_FMT ":%d ->"
+	printk(KERN_ALERT "[INFO] SNAT exp ORIGN: " NIPQUAD_FMT ":%d\t->"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all));
-	printk(KERN_ALERT "[INFO] SNAT exp REPLY: " NIPQUAD_FMT ":%d ->"
+	printk(KERN_ALERT "[INFO] SNAT exp REPLY: " NIPQUAD_FMT ":%d\t<-"
 		NIPQUAD_FMT ":%d\n",
-		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u3.all),
-		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u3.all),
-		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all));
+		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all),
+		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u3.all),
+		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all));
 
 	// DNAT
 	range.flags = IP_NAT_RANGE_MAP_IPS | IP_NAT_RANGE_PROTO_SPECIFIED;
@@ -75,18 +75,18 @@ static void ip_nat_dummy_expected(struct nf_conn *ct,
 		ct->master->tuplehash[!exp->dir].tuple.src.u3.ip;
 	nf_nat_setup_info(ct, &range, IP_NAT_MANIP_DST);
 
-	printk(KERN_ALERT "[INFO] DNAT exp ORIGN: " NIPQUAD_FMT ":%d ->"
+	printk(KERN_ALERT "[INFO] DNAT exp ORIGN: " NIPQUAD_FMT ":%d\t->"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all));
-	printk(KERN_ALERT "[INFO] DNAT exp REPLY: " NIPQUAD_FMT ":%d ->"
+	printk(KERN_ALERT "[INFO] DNAT exp REPLY: " NIPQUAD_FMT ":%d\t<-"
 		NIPQUAD_FMT ":%d\n",
-		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u3.all),
-		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u3.all),
-		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all));
+		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all),
+		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u3.all),
+		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all));
 }
 
 unsigned int ip_nat_dummy(struct sk_buff *skb, 
@@ -112,23 +112,37 @@ unsigned int ip_nat_dummy(struct sk_buff *skb,
 	// Find a free port
 	for (new_port = ntohs(exp->saved_proto.udp.port); new_port != 0;
 		++new_port) {
-		exp->tuple.dst.u.udp.port = new_port;
-		if (0 == nf_ct_expect_related(exp))
+		exp->tuple.dst.u.udp.port = htons(new_port);
+		if (0 == nf_ct_expect_related(exp)) {
+			printk(KERN_ALERT "[INFO] %s(%d) we expect... "
+				NIPQUAD_FMT ":%d\t->" NIPQUAD_FMT ":%d\n", __FILE__, __LINE__,
+				NIPQUAD(exp->tuple.src.u3.all),
+				ntohs(exp->tuple.src.u.udp.port),
+				NIPQUAD(new_ip),
+				new_port);
 			break;
+		}
 	}
 	
-	if (new_port == 0) // Can't find a free port
+	if (new_port == 0) { // Can't find a free port
+		printk(KERN_ALERT "[ERR] %s(%d) can't find a free port\n",
+			__FILE__, __LINE__);
 		return NF_DROP;
+	}
 
-	if (new_ip == exp->saved_ip ||
-		new_port == exp->saved_proto.udp.port) // If nothing changes
+	if (new_ip == exp->saved_ip &&
+		htons(new_port) == exp->saved_proto.udp.port) { // If nothing changes
+		printk(KERN_ALERT "[INFO] %s(%d) no need to mangle\n",
+			__FILE__, __LINE__);
 		return NF_ACCEPT;
+	}
 
-	if (!mangle_dummy(skb, new_ip, new_port)) {
+	if (!mangle_dummy(skb, new_ip, htons(new_port))) {
 		nf_ct_unexpect_related(exp);
 		return NF_DROP;
 	}
-
+	printk(KERN_ALERT "[INFO] %s(%d) mangle_dummy success\n",
+		__FILE__, __LINE__);
 	return NF_ACCEPT;
 }
 
@@ -141,6 +155,7 @@ static int mangle_dummy(struct sk_buff *skb, __be32 ip, u_int16_t port)
 	memcpy(buf, &ip, 4);
 	memcpy(buf + 4, &port, 2);
 
+	printk(KERN_ALERT "[INFO] %s(%d) mangle_dummy\n", __FILE__, __LINE__);
 	// The range begins from octet[1], span 6 octets. replace it with buf
 	return nf_nat_mangle_udp_packet(skb, ct, ctinfo, 1, 6, buf,
 		sizeof(buf));
@@ -150,12 +165,14 @@ static void __exit nf_nat_dummy_fini(void)
 {
 	rcu_assign_pointer(nf_nat_dummy_hook, NULL);
 	synchronize_rcu();
+	printk(KERN_ALERT "[INFO] nf_nat_dummy_fini\n");
 }
 
 static int __init nf_nat_dummy_init(void)
 {
 	BUG_ON(nf_nat_dummy_hook != NULL);
 	rcu_assign_pointer(nf_nat_dummy_hook, ip_nat_dummy);
+	printk(KERN_ALERT "[INFO] nf_nat_dummy_init\n");
 	return 0;
 }
 
