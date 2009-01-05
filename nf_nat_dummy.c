@@ -36,13 +36,13 @@ static void ip_nat_dummy_expected(struct nf_conn *ct,
 	struct nf_nat_range range;
 	BUG_ON(ct->status & IPS_NAT_DONE_MASK);
 	
-	printk(KERN_ALERT "[INFO] raw exp ORIGN: " NIPQUAD_FMT ":%d\t->"
+	printk(KERN_ALERT "[INFO] raw exp's ct ORIGN: " NIPQUAD_FMT ":%d\t->"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all));
-	printk(KERN_ALERT "[INFO] raw exp REPLY: " NIPQUAD_FMT ":%d\t<-"
+	printk(KERN_ALERT "[INFO] raw exp's ct REPLY: " NIPQUAD_FMT ":%d\t<-"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all),
@@ -50,18 +50,18 @@ static void ip_nat_dummy_expected(struct nf_conn *ct,
 		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.all));
 
 	// SNAT
-	range.flags = IP_NAT_RANGE_MAP_IPS;
+	range.flags = IP_NAT_RANGE_MAP_IPS; // As to port, let kernel choose it.
 	range.min_ip = range.max_ip =
 		ct->master->tuplehash[!exp->dir].tuple.dst.u3.ip;
 	nf_nat_setup_info(ct, &range, IP_NAT_MANIP_SRC);
 
-	printk(KERN_ALERT "[INFO] SNAT exp ORIGN: " NIPQUAD_FMT ":%d\t->"
+	printk(KERN_ALERT "[INFO] SNAT exp's ct ORIGN: " NIPQUAD_FMT ":%d\t->"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all));
-	printk(KERN_ALERT "[INFO] SNAT exp REPLY: " NIPQUAD_FMT ":%d\t<-"
+	printk(KERN_ALERT "[INFO] SNAT exp's ct REPLY: " NIPQUAD_FMT ":%d\t<-"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all),
@@ -70,18 +70,21 @@ static void ip_nat_dummy_expected(struct nf_conn *ct,
 
 	// DNAT
 	range.flags = IP_NAT_RANGE_MAP_IPS | IP_NAT_RANGE_PROTO_SPECIFIED;
-	range.min = range.max = exp->saved_proto; // master's port
+	range.min = range.max = exp->saved_proto;
+	range.min_ip = range.max_ip = exp->saved_ip;
+	/*
 	range.min_ip = range.max_ip =
 		ct->master->tuplehash[!exp->dir].tuple.src.u3.ip;
+	*/
 	nf_nat_setup_info(ct, &range, IP_NAT_MANIP_DST);
 
-	printk(KERN_ALERT "[INFO] DNAT exp ORIGN: " NIPQUAD_FMT ":%d\t->"
+	printk(KERN_ALERT "[INFO] DNAT exp's ct ORIGN: " NIPQUAD_FMT ":%d\t->"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.all),
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.all));
-	printk(KERN_ALERT "[INFO] DNAT exp REPLY: " NIPQUAD_FMT ":%d\t<-"
+	printk(KERN_ALERT "[INFO] DNAT exp's ct REPLY: " NIPQUAD_FMT ":%d\t<-"
 		NIPQUAD_FMT ":%d\n",
 		NIPQUAD(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u3.all),
 		ntohs(ct->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.all),
