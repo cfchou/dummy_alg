@@ -1,11 +1,11 @@
-linux kernel 2.6.26
+# linux kernel 2.6.26
 
 /* 'dummy' protocol
  * peer1 -> peer2:DUMMY_PORT
  *
  * | ip header	| udp header	| 'dummy' data...
  *
- * octet[0] 
+ * octet[0]
  *	type: make it 0, reserved for the futhure
  * octet[1-4]
  *	ipv4: ip of peer1
@@ -15,22 +15,21 @@ linux kernel 2.6.26
  *      length: length of payload
  * octet[8-]
  * 	payload
- *	
+ *
  * peer1 sends its greeting as well as address info to peer2.
  * then peer2 greets back.
  *
  */
 
-/*
- * test programs demostrate using dummy protocol
- */
+
+## test programs demostrate using dummy protocol
+
 peer2> ./rdummy -i interface
 peer1> ./sdummy -i interface -p port -r peer2_ip
 
 
-/*
- * build alg
- */
+## build alg
+
 bash> cd /path/to/module-source/
 bash> echo "obj-m += nf_conntrack_dummy.ko" >> Makefile
 bash> make -C /usr/src/linux/ M=/root/src/dummy_alg modules
